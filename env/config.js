@@ -7,7 +7,7 @@ var twitterStrategy = {
 
 var config = {
 	twitter: twitterStrategy,
-	mongooseURL: 'mongodb://localhost/todo',
+	mongooseURL: 'mongodb://localhost/plus_one',
 	isAuthenticated: function(req, res, next)
 	{
 		 if (req.isAuthenticated()) { 

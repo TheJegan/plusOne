@@ -5,7 +5,7 @@ var app = app || {};
 	var userCollection = Backbone.Collection.extend(
 	{
 		model: app.UserModel,
-		url: 'user/me',
+		url: 'users/me',
 		initialize: function()
 		{
 

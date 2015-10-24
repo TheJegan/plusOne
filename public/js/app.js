@@ -9,17 +9,17 @@ var app = app || {};
 		},
 		error: function(a, b, c)
 		{
-			app.User.trigger('not authorized');
+			app.User.trigger('not_authorized');
 		}
 	});
 
 
 	app.User.on('authorized', function()
 	{
-
+		new app.ProfileView();
 	});
 
-	app.User.on('not authorized', function()
+	app.User.on('not_authorized', function()
 	{
 		new app.LoginView();
 	});

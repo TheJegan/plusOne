@@ -10,8 +10,8 @@ var app = app || {};
 			'name': '',
 			'displayName': '',
 			'createdBy': '',
-			'createdDateTime': ''
-
+			'createdDateTime': '',
+			'friends': []
 		},
 		idAttribute: '_id',
 		initialize: function()
