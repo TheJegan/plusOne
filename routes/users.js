@@ -13,48 +13,70 @@ router.get('/me', env.isAuthenticated, function(req, res, next) {
 	
 	var userId = req.user._id;
 
-	console.log('user: ' + userId);
-
-
-	// Friend.find({userId: userId})
-	// 	.lean()
-	// 	.populate('userId')
-	// 	.exec(function(err, user)
-	// 	{
-	// 		res.send(user)
-	// 	})
+	// console.log('user: ' + userId);
 
 	User.find({_id: userId}).lean().exec(function(err, u)
 	{
 		if(!err)
 		{
 			var user = u[0];
-			
+	
+			Friend.find({userId: userId}).select('friendId').lean().populate('friendId').exec(function(err, friends)
+		    {
+		    	user.friends = [];
 
-			emitter.emit('fetch_friends', user);
-			// res.send(user);
-		}
-		
-	});
+		    	if(friends)
+		    	{
+		    		if(typeof friends !== 'undefined')
+			    	{
+			    		if(typeof friends.length ==='undefined')
+			    		{
+			    			user.friends = [friends]
+			    		}else
+			    		{
+			    			for(var i=0; i< friends.length; i++)
+							{
+								user.friends.push(friends[i].friendId);	
+							}
+			    		}
+			    	}
+		    	}
+		    	else
+		    	{
+		    		user.friends = [];
+		    	}
+		    	
+				
 
-	emitter.on("fetch_friends",function(user){
-	    // console.log(“hello world !”);
+		    	Friend.find({friendId: userId})
+				.select('userId')
+				.lean()
+				.populate('userId')
+				.exec(function(err, friends)
+			    {
+			    	if(friends)
+			    	{
+			    		if(friends.length)
+			    		{
+			    			for(var i=0; i< friends.length; i++)
+							{
+								user.friends.push(friends[i].userId);	
+							}
+			    		}
+			    		else
+			    		{
+			    			user.friends.push(friends);
+			    		}
+			    			
+			    	}
+			    	
+			    	return res.send(user);
+			    });
+		    });
+		}		
+	});	
 
-	    Friend.findOne({userId: userId}).lean().populate('friendId').exec(function(err, friends)
-	    {
-	    	console.log();
-	    	
-			user.friends =[];
-	    	// if(typeof friends !== 'undefined')
-	    	// {
-	    	// 	user.friends = (typeof friends.length === 'undefined') ? [friends] : friends;
-	    	// }
-	    	user.friends = friends;
-	    	return res.send(user);
-	    });
-	});
-  // return user info and relationships
-
+	// return user info and relationships
 
   	// User.find({oauthID: req.user._id}, function(err, user)
   	// {
@@ -66,51 +88,6 @@ router.get('/me', env.isAuthenticated, function(req, res, next) {
 	//search db by friendId
 
 });
-
-
-//get user by search their username
-function SyncLocalStorage(req, res, next)
-{
-	var rec = req.body;
-	var bulk = List.collection.initializeUnorderedBulkOp();
-
-	if(rec.length === 0)
-	{
-		next();
-	}
-	else
-	{
-
-		for(var i = 0; i < rec.length; i++)
-		{
-			if(rec[i].isDelete === true)
-			{
-				bulk.find({'_id': rec[i]._id}).remove({'_id': rec[i]._id});
-			}
-			else
-			{
-				if(rec[i]._id.length === 36) //place holder hack
-				{
-					bulk.insert({ name: rec[i].name, _user: req.user._id})
-				}
-				else
-				{
-					bulk.find( {'_id': rec[i]._id}).upsert().update(
-					   {
-					      $set: { name: rec[i].name, _user: req.user._id} 
-					   }
-					);
-				}		
-			}
-		}
-
-		bulk.execute(function(err,results) {
-	   		// result contains stats of the operations
-	   		next();
-		});
-	}
-
-}
 
 router.post('/:userId', function(req, res, next){
 	//create relationship
@@ -124,15 +101,10 @@ router.post('/:userId', function(req, res, next){
 		Approved: false
 	});
 
-
-
 	friend.save(function()
 	{
 		res.send({status: 'coo'});		
 	});
-
-
-
 });
 
 
